@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Insights</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --accent: #a78bfa;
+      --accent2: #60a5fa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #2d3149;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Hero Header ── */
+    .hero {
+      background: linear-gradient(160deg, #1a1232 0%, var(--bg) 60%);
+      border-bottom: 1px solid var(--border);
+      padding: 3.5rem 1.5rem 3rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(167, 139, 250, 0.12);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 20px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #c4b5fd 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.8rem;
+      line-height: 1.15;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Main Content ── */
+    .main { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+    /* ── Section Heading ── */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+    .section-heading h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .count-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+    }
+
+    /* ── Insight Cards ── */
+    #insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.1rem;
+    }
+
+    .insight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .insight-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .insight-card:hover {
+      border-color: rgba(167, 139, 250, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+    .insight-card:hover::before { opacity: 1; }
+
+    .card-month {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .card-summary {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+    .card-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 0.2rem;
+    }
+    .card-cta svg {
+      transition: transform 0.2s;
+    }
+    .insight-card:hover .card-cta svg { transform: translateX(3px); }
+
+    /* ── Empty State ── */
+    #empty-state {
+      display: none;
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    #empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    #empty-state p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── Loading State ── */
+    #loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Error State ── */
+    #error-state {
+      display: none;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="hero-badge">Monthly Reports</div>
+    <h1>Claude Insights</h1>
+    <p>A monthly look at how I use Claude — topics, trends, and patterns over time.</p>
+  </div>
+
+  <main class="main">
+    <div class="section-heading">
+      <h2>All Reports</h2>
+      <span class="count-badge" id="count-badge">—</span>
+    </div>
+
+    <div id="loading">Loading insights…</div>
+    <div id="error-state"></div>
+    <div id="insights-grid" style="display:none"></div>
+    <div id="empty-state">
+      <div class="icon">📭</div>
+      <p>No insights yet.<br>Run <code>/insights</code> to generate your first report.</p>
+    </div>
+  </main>
+
+  <footer>
+    Generated with Claude · Hosted on GitHub Pages
+  </footer>
+
+  <script>
+    const MANIFEST = 'insights/manifest.json';
+
+    function formatDate(iso) {
+      // Use midday UTC so that timezone differences never shift the displayed date by a day
+      const d = new Date(iso + 'T12:00:00Z');
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    }
+
+    function renderCard(entry) {
+      const card = document.createElement('a');
+      card.className = 'insight-card';
+      card.href = entry.file;
+      card.innerHTML = `
+        <div>
+          <div class="card-month">${entry.title}</div>
+          <div class="card-date">${formatDate(entry.date)}</div>
+        </div>
+        <div class="card-summary">${entry.summary || 'View full report →'}</div>
+        <div class="card-cta">
+          View report
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      `;
+      return card;
+    }
+
+    async function init() {
+      const loading = document.getElementById('loading');
+      const grid = document.getElementById('insights-grid');
+      const empty = document.getElementById('empty-state');
+      const errEl = document.getElementById('error-state');
+      const badge = document.getElementById('count-badge');
+
+      try {
+        const res = await fetch(MANIFEST);
+        if (!res.ok) throw new Error(`Could not load manifest (HTTP ${res.status})`);
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          badge.textContent = '0 reports';
+          return;
+        }
+
+        // Sort newest first
+        const sorted = [...data].sort((a, b) => b.date.localeCompare(a.date));
+
+        badge.textContent = `${sorted.length} report${sorted.length !== 1 ? 's' : ''}`;
+        grid.style.display = 'grid';
+
+        for (const entry of sorted) {
+          grid.appendChild(renderCard(entry));
+        }
+
+      } catch (err) {
+        loading.style.display = 'none';
+        errEl.style.display = 'block';
+        errEl.textContent = `Failed to load insights: ${err.message}`;
+        console.error(err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
